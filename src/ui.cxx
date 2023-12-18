@@ -1131,6 +1131,8 @@ void GetParamFile(Options &opt)
                     //input related
                     else if (strcmp(tbuff, "Cosmological_input")==0)
                         opt.icosmologicalin = atoi(vbuff);
+	 	    else if (strcmp(tbuff, "Ramses_partiotype")==0)
+			opt.ramses_partiotype = atoi(vbuff);
                     //input read related
                     else if (strcmp(tbuff, "Input_chunk_size")==0)
                         opt.inputbufsize = atol(vbuff);
@@ -2636,6 +2638,7 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("Comoving_units", opt.icomoveunit);
     AddEntry("Extended_output", opt.iextendedoutput);
 
+    AddEntry("Ramses_partiotype", opt.ramses_partiotype);
     //HDF io related info
     AddEntry("HDF_name_convention", opt.ihdfnameconvention);
     AddEntry("Input_includes_dm_particle", opt.iusedmparticles);

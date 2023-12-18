@@ -476,6 +476,9 @@ struct Options
     /// if using parallel output, number of mpi threads to group together
     int mpinprocswritesize = 1;
 
+    /// For ramses part io (-1 old ver; 1 w /family)
+    int ramses_partiotype = -1;
+
     /// run FOF using OpenMP
     int iopenmpfof = 1;
     /// size of openmp FOF region
