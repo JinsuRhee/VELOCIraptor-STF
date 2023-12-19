@@ -66,6 +66,13 @@ int RAMSES_fortran_read(fstream &F, RAMSESFLOAT *f){
     F.read((char*)&dummy, sizeof(dummy));byteoffset+=sizeof(int);
     return byteoffset;
 }
+int RAMSES_fortran_read(fstream &F, char *f){
+    int dummy,byteoffset=0;
+    F.read((char*)&dummy, sizeof(dummy));byteoffset+=sizeof(char);
+    F.read((char*)f,dummy); byteoffset+=dummy;
+    F.read((char*)&dummy, sizeof(dummy));byteoffset+=sizeof(char);
+    return byteoffset;
+}
 
 int RAMSES_fortran_skip(fstream &F, int nskips){
     int dummy,byteoffset=0;
@@ -81,6 +88,8 @@ Int_t RAMSES_get_nbodies(char *fname, int ptype, Options &opt)
 {
     char buf[2000],buf1[2000],buf2[2000];
     double * dummy_age, * dummy_mass;
+    char *dummy_family2; // for ramses new part io
+    int *dummy_family;
     double dmp_mass;
     double OmegaM, OmegaB;
     int totalghost = 0;
@@ -363,6 +372,10 @@ Int_t RAMSES_get_nbodies(char *fname, int ptype, Options &opt)
         //allocate memory to store masses and ages
         dummy_mass = new double [ramses_header_info.npartlocal];
         dummy_age  = new double [ramses_header_info.npartlocal];
+	if(opt.ramses_partiotype==1){
+		dummy_family = new int [ramses_header_info.npartlocal];
+		dummy_family2 = new char[ramses_header_info.npartlocal];
+	}
 
         // Read Mass
         Framses.read((char*)&dummy, sizeof(dummy));
@@ -379,6 +392,19 @@ Int_t RAMSES_get_nbodies(char *fname, int ptype, Options &opt)
         Framses.seekg(dummy,ios::cur);
         Framses.read((char*)&dummy, sizeof(dummy));
 
+	if(opt.ramses_partiotype==1){
+		// Read Family
+		Framses.read((char*)&dummy, sizeof(dummy));
+		Framses.read((char*)&dummy_family2[0], dummy);
+		Framses.read((char*)&dummy, sizeof(dummy));
+		for(int ii2=0; ii2<ramses_header_info.npartlocal; ii2++) dummy_family[ii2]=dummy_family2[ii2]+0;
+
+		// Skip Tag
+		Framses.read((char*)&dummy, sizeof(dummy));
+		Framses.seekg(dummy,ios::cur);
+		Framses.read((char*)&dummy, sizeof(dummy));
+	}
+
         // Read Birth epoch
         //necessary to separate ghost star particles with negative ages from real one
         Framses.read((char*)&dummy, sizeof(dummy));
@@ -388,16 +414,29 @@ Int_t RAMSES_get_nbodies(char *fname, int ptype, Options &opt)
         ghoststars = 0;
         for (j = 0; j < ramses_header_info.npartlocal; j++)
         {
-            if (fabs((dummy_mass[j]-dmp_mass)/dmp_mass) < 1e-5)
-                ramses_header_info.npart[RAMSESDMTYPE]++;
-            else
-                if (dummy_age[j] != 0.0)
-                    ramses_header_info.npart[RAMSESSTARTYPE]++;
-                else
-                ghoststars++;
+	    if(opt.ramses_partiotype==-1){ // old specifier
+		    if (fabs((dummy_mass[j]-dmp_mass)/dmp_mass) < 1e-5)
+			ramses_header_info.npart[RAMSESDMTYPE]++;
+		    else
+			if (dummy_age[j] != 0.0)
+			    ramses_header_info.npart[RAMSESSTARTYPE]++;
+			else
+			ghoststars++;
+	    }
+	    else if(opt.ramses_partiotype==1){ // new specifier using family value
+		    if (fabs((dummy_mass[j]-dmp_mass)/dmp_mass) < 1e-5)
+			ramses_header_info.npart[RAMSESDMTYPE]++;
+		if(dummy_family[j]==2) ramses_header_info.npart[RAMSESSTARTYPE] ++;
+		if(dummy_family[j]==3) ramses_header_info.npart[RAMSESSINKTYPE] ++;
+	    }
+		
         }
         delete [] dummy_age;
         delete [] dummy_mass;
+	if(opt.ramses_partiotype==1){
+		delete [] dummy_family;
+		delete [] dummy_family2;
+	}
         Framses.close();
 
         totalghost += ghoststars;
@@ -457,6 +496,10 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
     int lmin=1000000,lmax=0;
     double dmp_mass;
 
+    char *famtempchunk2; // for a new ramses part io type
+    int *famtempchunk;
+    fstream *Fpartfam;
+
     int ninputoffset = 0;
     int ifirstfile=0,ibuf=0;
     std::vector<int> ireadfile;
@@ -485,6 +528,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
     Fpartlevel = new fstream[opt.num_files];
     Fpartage   = new fstream[opt.num_files];
     Fpartmet   = new fstream[opt.num_files];
+    Fpartfam   = new fstream[opt.num_files];
     header     = new RAMSES_Header[opt.num_files];
 
     Particle *Pbuf;
@@ -678,6 +722,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         Fpartlevel[i].open(buf, ios::binary|ios::in);
         Fpartage[i].open(buf, ios::binary|ios::in);
         Fpartmet[i].open(buf, ios::binary|ios::in);
+	Fpartfam[i].open(buf, ios::binary|ios::in);
 
         //skip header information in each file save for number in the file
         //@{
@@ -698,6 +743,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         Fpartlevel[i].seekg(byteoffset,ios::cur);
         Fpartage[i].seekg(byteoffset,ios::cur);
         Fpartmet[i].seekg(byteoffset,ios::cur);
+	Fpartfam[i].seekg(byteoffset,ios::cur);
         //skip positions
         for(idim=0;idim<header[ifirstfile].ndim;idim++)
         {
@@ -707,6 +753,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
             RAMSES_fortran_skip(Fpartlevel[i]);
             RAMSES_fortran_skip(Fpartage[i]);
             RAMSES_fortran_skip(Fpartmet[i]);
+	    RAMSES_fortran_skip(Fpartfam[i]);
         }
         //skip velocities
         for(idim=0;idim<header[ifirstfile].ndim;idim++)
@@ -716,19 +763,33 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
             RAMSES_fortran_skip(Fpartlevel[i]);
             RAMSES_fortran_skip(Fpartage[i]);
             RAMSES_fortran_skip(Fpartmet[i]);
+	    RAMSES_fortran_skip(Fpartfam[i]);
         }
         //skip mass
         RAMSES_fortran_skip(Fpartid[i]);
         RAMSES_fortran_skip(Fpartlevel[i]);
         RAMSES_fortran_skip(Fpartage[i]);
         RAMSES_fortran_skip(Fpartmet[i]);
+	RAMSES_fortran_skip(Fpartfam[i]);
         //skip ids;
         RAMSES_fortran_skip(Fpartlevel[i]);
         RAMSES_fortran_skip(Fpartage[i]);
         RAMSES_fortran_skip(Fpartmet[i]);
+	RAMSES_fortran_skip(Fpartfam[i]);
         //skip levels
         RAMSES_fortran_skip(Fpartage[i]);
         RAMSES_fortran_skip(Fpartmet[i]);
+	RAMSES_fortran_skip(Fpartfam[i]);
+	
+	//skip family
+	if(opt.ramses_partiotype==1){
+		RAMSES_fortran_skip(Fpartage[i]);
+		RAMSES_fortran_skip(Fpartmet[i]);
+
+		RAMSES_fortran_skip(Fpartage[i]);
+		RAMSES_fortran_skip(Fpartmet[i]);
+	}
+	
         //skip ages
         RAMSES_fortran_skip(Fpartmet[i]);
         //@}
@@ -743,6 +804,10 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         levelchunk   = new RAMSESIDTYPE [chunksize];
         agetempchunk = new RAMSESFLOAT  [chunksize];
         mettempchunk = new RAMSESFLOAT  [chunksize];
+	if(opt.ramses_partiotype==1){
+		famtempchunk = new int [chunksize];
+		famtempchunk2= new char [chunksize];
+	}
 
         for(idim=0;idim<header[ifirstfile].ndim;idim++)
         {
@@ -755,7 +820,12 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         RAMSES_fortran_read(Fpartage[i],   agetempchunk);
         RAMSES_fortran_read(Fpartmet[i],   mettempchunk);
 
-        RAMSES_fortran_read(Fpartid[i],idvalchunk);
+	if(opt.ramses_partiotype==1){
+		RAMSES_fortran_read(Fpartfam[i], famtempchunk2);
+		for(int nn=0; nn<chunksize; nn++) famtempchunk[nn] = famtempchunk2[nn]+0;
+	}
+
+        //RAMSES_fortran_read(Fpartid[i],idvalchunk); // JS - bug?
         for (int nn=0;nn<nchunk;nn++)
         {
             if (fabs((mtempchunk[nn]-dmp_mass)/dmp_mass) > 1e-5 && (agetempchunk[nn] == 0.0))
@@ -782,8 +852,15 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
             mtemp=1.0;
 #endif
             ageval = agetempchunk[nn];
-            if (fabs((mtemp-dmp_mass)/dmp_mass) < 1e-5) typeval = DARKTYPE;
-            else typeval = STARTYPE;
+	    if(opt.ramses_partiotype==-1){
+		    if (fabs((mtemp-dmp_mass)/dmp_mass) < 1e-5) typeval = DARKTYPE;
+		    else typeval = STARTYPE;
+	    }
+	    else if(opt.ramses_partiotype==1){
+	    	if (fabs((mtemp-dmp_mass)/dmp_mass) < 1e-5) typeval = DARKTYPE;
+		if (famtempchunk[nn]==2) typeval = STARTYPE;
+		if (famtempchunk[nn]==3) typeval = BHTYPE;
+	    }
 /*
             if (ageval==0 && idval>0) typeval=DARKTYPE;
             else if (idval>0) typeval=STARTYPE;
@@ -979,6 +1056,11 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         delete[] agetempchunk;
         delete[] levelchunk;
         delete[] mettempchunk;
+	if(opt.ramses_partiotype==1){
+		delete[] famtempchunk;
+		delete[] famtempchunk2;
+	}
+
         Fpart[i].close();
         Fpartvel[i].close();
         Fpartmass[i].close();
@@ -986,6 +1068,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
         Fpartlevel[i].close();
         Fpartage[i].close();
         Fpartmet[i].close();
+	Fpartfam[i].close();
 #ifdef USEMPI
 
         //send information between read threads
