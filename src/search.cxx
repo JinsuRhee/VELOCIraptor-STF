@@ -1705,6 +1705,15 @@ private(i,tid)
         for (i=0;i<nsubset;i++) Partsubset[i].SetPotential(pfof[Partsubset[i].GetID()]);
         for (i=0;i<nsubset;i++) Partsubset[i].SetType(-1);
         param[9]=0.5;
+
+	//--JS--
+	// Here building tree for FOF6DCORE
+	if(opt.foftype==FOF6DCORE){
+		delete tree
+		tree = new KDTree(0.0, param, Partsubset, nsubset, opt.Bsize, tree->TPHS);
+		param[0]=tree->GetTreeType();
+	}
+
         pfofbg=tree->FOFCriterion(fofcmp,param,numgroupsbg,minsize,iorder,icheck,FOFcheckbg);
 
         for (i=0;i<nsubset;i++) if (pfofbg[Partsubset[i].GetID()]<=1 && pfof[Partsubset[i].GetID()]==0) Partsubset[i].SetType(numactiveloops);
