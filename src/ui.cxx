@@ -1128,11 +1128,14 @@ void GetParamFile(Options &opt)
                     else if (strcmp(tbuff, "Snapshot_value")==0)
                         opt.snapshotvalue = HALOIDSNVAL*atoi(vbuff);
 
+                    //Performation boost related
+                    else if (strcmp(tbuff, "FoF_perform_useadt")==0)
+                        opt.FoF_perform_useadt = atoi(vbuff);
                     //input related
                     else if (strcmp(tbuff, "Cosmological_input")==0)
                         opt.icosmologicalin = atoi(vbuff);
-	 	    else if (strcmp(tbuff, "Ramses_partiotype")==0)
-			opt.ramses_partiotype = atoi(vbuff);
+	 	            else if (strcmp(tbuff, "Ramses_partiotype")==0)
+			            opt.ramses_partiotype = atoi(vbuff);
                     //input read related
                     else if (strcmp(tbuff, "Input_chunk_size")==0)
                         opt.inputbufsize = atol(vbuff);
@@ -2628,6 +2631,9 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("Verbose", opt.iverbose);
     AddEntry("Write_group_array_file",opt.iwritefof);
     AddEntry("Snapshot_value",opt.snapshotvalue);
+
+    //Performation boost related
+    AddEntry("FoF_perform_useadt", opt.FoF_perform_useadt);
 
     //io related
     AddEntry("Cosmological_input",opt.icosmologicalin);

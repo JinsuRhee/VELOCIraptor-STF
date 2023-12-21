@@ -656,7 +656,12 @@ private(i,tid,xscaling,vscaling)
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
             xscaling=1.0/xscaling;vscaling=1.0/vscaling;
-            treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
+            if(!opt.FoF_perform_useadt){
+                treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
+            }
+            else{
+                treeomp[tid]=new KDTree(0., &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
+            }
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
             delete treeomp[tid];
             for (Int_t j=0;j<numingroup[i];j++) {
@@ -1709,8 +1714,13 @@ private(i,tid)
 	//--JS--
 	// Here building tree for FOF6DCORE
 	if(opt.foftype==FOF6DCORE){
-		delete tree
-		tree = new KDTree(0.0, param, Partsubset, nsubset, opt.Bsize, tree->TPHS);
+		delete tree;
+		if(!opt.FoF_perform_useadt){
+            tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHS);
+        }
+        else{
+            tree = new KDTree(0., Partsubset,nsubset,opt.Bsize,tree->TPHS);
+        }
 		param[0]=tree->GetTreeType();
 	}
 
