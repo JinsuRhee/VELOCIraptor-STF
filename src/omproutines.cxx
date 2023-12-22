@@ -53,11 +53,11 @@ KDTree **OpenMPBuildLocalTrees(Options &opt, const Int_t numompregions, vector<P
     {
     #pragma omp for schedule(static) nowait
     for (i=0;i<numompregions;i++) {
-        if(!opt.FoF_perform_useadt){
+        if(!opt.FoF_perform_useadt_forsearch){
             tree3dfofomp[i] = new KDTree(&Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
         }
         else{
-            tree3dfofomp[i] = new KDTree(0., &Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
+            tree3dfofomp[i] = new KDTree(0., 1, &Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
         }
         tree3dfofomp[i]->OverWriteInputOrder();
     }

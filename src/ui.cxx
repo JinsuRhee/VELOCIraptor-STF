@@ -1129,8 +1129,12 @@ void GetParamFile(Options &opt)
                         opt.snapshotvalue = HALOIDSNVAL*atoi(vbuff);
 
                     //Performation boost related
-                    else if (strcmp(tbuff, "FoF_perform_useadt")==0)
-                        opt.FoF_perform_useadt = atoi(vbuff);
+                    else if (strcmp(tbuff, "FoF_perform_useadt_forsearch")==0)
+                        opt.FoF_perform_useadt_forsearch = atoi(vbuff);
+                    else if (strcmp(tbuff, "FoF_perform_useadt_fordomain")==0)
+                        opt.FoF_perform_useadt_fordomain = atoi(vbuff);
+                    else if (strcmp(tbuff, "FoF_perform_useadt_nmindomain")==0)
+                        opt.FoF_perform_useadt_nmindomain = atoi(vbuff);
                     //input related
                     else if (strcmp(tbuff, "Cosmological_input")==0)
                         opt.icosmologicalin = atoi(vbuff);
@@ -2633,7 +2637,9 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("Snapshot_value",opt.snapshotvalue);
 
     //Performation boost related
-    AddEntry("FoF_perform_useadt", opt.FoF_perform_useadt);
+    AddEntry("FoF_perform_useadt_forsearch", opt.FoF_perform_useadt_forsearch);
+    AddEntry("FoF_perform_useadt_fordomain", opt.FoF_perform_useadt_fordomain);
+    AddEntry("FoF_perform_useadt_nmindomain", opt.FoF_perform_useadt_nmindomain);
 
     //io related
     AddEntry("Cosmological_input",opt.icosmologicalin);

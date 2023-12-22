@@ -93,7 +93,13 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         vr::Timer t;
         Double_t rdist = sqrt(param[1]);
         //determine the omp regions;
-        tree = new KDTree(Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+        if(!opt.FoF_perform_useadt_fordomain){
+            tree = new KDTree(Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+        }
+        else{
+            tree = new KDTree(rdist, opt.FoF_perform_useadt_nmindomain, Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+        }
+
         tree->OverWriteInputOrder();
         numompregions=tree->GetNumLeafNodes();
         ompdomain = OpenMPBuildDomains(opt, numompregions, tree, rdist);
@@ -656,11 +662,11 @@ private(i,tid,xscaling,vscaling)
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
             }
             xscaling=1.0/xscaling;vscaling=1.0/vscaling;
-            if(!opt.FoF_perform_useadt){
+            if(!opt.FoF_perform_useadt_forsearch){
                 treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             else{
-                treeomp[tid]=new KDTree(0., &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
+                treeomp[tid]=new KDTree(0., 1, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
             delete treeomp[tid];
@@ -1136,6 +1142,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
         pfof=new Int_t[nsubset];
         for (i=0;i<nsubset;i++) pfof[i]=0;
     }
+
+cout<<"%123123 --- "<<opt.foftype<<endl;
     //@}
     //now actually search for dynamically distinct substructures
     //@{
@@ -1715,11 +1723,11 @@ private(i,tid)
 	// Here building tree for FOF6DCORE
 	if(opt.foftype==FOF6DCORE){
 		delete tree;
-		if(!opt.FoF_perform_useadt){
+		if(!opt.FoF_perform_useadt_forsearch){
             tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHS);
         }
         else{
-            tree = new KDTree(0., Partsubset,nsubset,opt.Bsize,tree->TPHS);
+            tree = new KDTree(0., 1, Partsubset,nsubset,opt.Bsize,tree->TPHS);
         }
 		param[0]=tree->GetTreeType();
 	}

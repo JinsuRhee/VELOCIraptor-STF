@@ -477,7 +477,9 @@ struct Options
     int mpinprocswritesize = 1;
 
     /// Performance boost related
-    int FoF_perform_useadt = -1; //(1 using adative tree)
+    int FoF_perform_useadt_forsearch = -1; //(1 using adative tree)
+    int FoF_perform_useadt_fordomain = -1; //(1 using adative tree)
+    Int_t FoF_perform_useadt_nmindomain = 10000; //(minimum size for a domain)
 
     /// For ramses part io (-1 old ver; 1 w /family)
     int ramses_partiotype = -1;
