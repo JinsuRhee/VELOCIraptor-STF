@@ -1129,6 +1129,8 @@ void GetParamFile(Options &opt)
                         opt.snapshotvalue = HALOIDSNVAL*atoi(vbuff);
 
                     //Performation boost related
+                    else if (strcmp(tbuff, "FoF_perform_useskip")==0)
+                        opt.FoF_perform_useskip = atoi(vbuff);
                     else if (strcmp(tbuff, "FoF_perform_useadt_forsearch")==0)
                         opt.FoF_perform_useadt_forsearch = atoi(vbuff);
                     else if (strcmp(tbuff, "FoF_perform_useadt_fordomain")==0)
@@ -2637,6 +2639,7 @@ ConfigInfo::ConfigInfo(Options &opt){
     AddEntry("Snapshot_value",opt.snapshotvalue);
 
     //Performation boost related
+    AddEntry("FoF_perform_useskip", opt.FoF_perform_useskip);
     AddEntry("FoF_perform_useadt_forsearch", opt.FoF_perform_useadt_forsearch);
     AddEntry("FoF_perform_useadt_fordomain", opt.FoF_perform_useadt_fordomain);
     AddEntry("FoF_perform_useadt_nmindomain", opt.FoF_perform_useadt_nmindomain);

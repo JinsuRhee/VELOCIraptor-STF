@@ -60,6 +60,7 @@ KDTree **OpenMPBuildLocalTrees(Options &opt, const Int_t numompregions, vector<P
         }
         else{
             ip_perform[0] = 1;
+            ip_perform[1] = opt.FoF_perform_useskip;
             tree3dfofomp[i] = new KDTree(dp_perform, ip_perform, &Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
         }
         tree3dfofomp[i]->OverWriteInputOrder();

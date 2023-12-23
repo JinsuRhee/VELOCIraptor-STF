@@ -477,6 +477,7 @@ struct Options
     int mpinprocswritesize = 1;
 
     /// Performance boost related
+    int FoF_perform_useskip = -1;
     int FoF_perform_useadt_forsearch = -1; //(1 using adative tree)
     int FoF_perform_useadt_fordomain = -1; //(1 using adative tree)
     Int_t FoF_perform_useadt_nmindomain = 10000; //(minimum size for a domain)

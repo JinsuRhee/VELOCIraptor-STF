@@ -100,6 +100,7 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         }
         else{
             ip_perform[0] = 0;
+            ip_perform[1] = opt.FoF_perform_useskip;
             ip_perform[1] = opt.FoF_perform_useadt_nmindomain;
             dp_perform[0] = sqrt(param[1]);
             tree = new KDTree(dp_perform, ip_perform, Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
@@ -672,6 +673,7 @@ private(i,tid,xscaling,vscaling)
             }
             else{
                 ip_perform[0] = 1;
+                ip_perform[1] = opt.FoF_perform_useskip;
                 treeomp[tid]=new KDTree(dp_perform, ip_perform, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
@@ -1735,6 +1737,7 @@ private(i,tid)
         }
         else{
             ip_perform[0] = 2;
+            ip_perform[1] = opt.FoF_perform_useskip;
             dp_perform[1] = param[1];
             dp_perform[2] = param[2];
             tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHS);
