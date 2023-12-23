@@ -33,6 +33,8 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
     fstream Fout;
     char fname[2000];
     Double_t param[20];
+    Double_t dp_perform[20];
+    Int_t ip_perform[20];
     Double_t *period=NULL;
     Double_t vscale2,mtotregion,vx,vy,vz;
     Double_t *vscale2array = NULL;
@@ -97,7 +99,10 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
             tree = new KDTree(Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
         }
         else{
-            tree = new KDTree(rdist, opt.FoF_perform_useadt_nmindomain, Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
+            ip_perform[0] = 0;
+            ip_perform[1] = opt.FoF_perform_useadt_nmindomain;
+            dp_perform[0] = sqrt(param[1]);
+            tree = new KDTree(dp_perform, ip_perform, Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
         }
 
         tree->OverWriteInputOrder();
@@ -666,7 +671,8 @@ private(i,tid,xscaling,vscaling)
                 treeomp[tid]=new KDTree(&(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             else{
-                treeomp[tid]=new KDTree(0., 1, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
+                ip_perform[0] = 1;
+                treeomp[tid]=new KDTree(dp_perform, ip_perform, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
             delete treeomp[tid];
@@ -1023,6 +1029,8 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
     fstream Fout;
     char fname[200];
     Double_t param[20];
+    Double_t dp_perform[20];
+    Int_t ip_perform[20];
     int nsearch=opt.Nvel;
     Int_t **nnID;
     Double_t **dist2;
@@ -1143,7 +1151,6 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
         for (i=0;i<nsubset;i++) pfof[i]=0;
     }
 
-cout<<"%123123 --- "<<opt.foftype<<endl;
     //@}
     //now actually search for dynamically distinct substructures
     //@{
@@ -1727,7 +1734,10 @@ private(i,tid)
             tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHS);
         }
         else{
-            tree = new KDTree(0., 1, Partsubset,nsubset,opt.Bsize,tree->TPHS);
+            ip_perform[0] = 2;
+            dp_perform[1] = param[1];
+            dp_perform[2] = param[2];
+            tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHS);
         }
 		param[0]=tree->GetTreeType();
 	}

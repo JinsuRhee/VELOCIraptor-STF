@@ -47,6 +47,8 @@ KDTree **OpenMPBuildLocalTrees(Options &opt, const Int_t numompregions, vector<P
 {
     KDTree **tree3dfofomp = new KDTree*[numompregions];
     Int_t i;
+    Double_t dp_perform[20];
+    Int_t ip_perform[20];
     //get fof in each region
     #pragma omp parallel default(shared) \
     private(i)
@@ -57,7 +59,8 @@ KDTree **OpenMPBuildLocalTrees(Options &opt, const Int_t numompregions, vector<P
             tree3dfofomp[i] = new KDTree(&Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
         }
         else{
-            tree3dfofomp[i] = new KDTree(0., 1, &Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
+            ip_perform[0] = 1;
+            tree3dfofomp[i] = new KDTree(dp_perform, ip_perform, &Part.data()[ompdomain[i].noffset],ompdomain[i].ncount,opt.Bsize,tree3dfofomp[i]->TPHYS,tree3dfofomp[i]->KEPAN,100,0,0,0,period,NULL);
         }
         tree3dfofomp[i]->OverWriteInputOrder();
     }
