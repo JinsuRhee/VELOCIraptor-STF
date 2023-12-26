@@ -251,6 +251,7 @@ void MPINumInDomainRAMSES(Options &opt)
                             mtemp = mtempchunk[nn];
                             ageval = agetempchunk[nn];
 
+			    typeval = 100; //initialized
                             if (fabs(mtemp-dmp_mass)/dmp_mass<1e-5)
                             {
                                 typeval = DARKTYPE;
