@@ -100,8 +100,8 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
         }
         else{
             ip_perform[0] = 0;
-            ip_perform[1] = opt.FoF_perform_useskip;
             ip_perform[1] = opt.FoF_perform_useadt_nmindomain;
+            ip_perform[2] = opt.FoF_perform_useskip;
             dp_perform[0] = sqrt(param[1]);
             tree = new KDTree(dp_perform, ip_perform, Part.data(),nbodies,opt.openmpfofsize,tree->TPHYS,tree->KEPAN,100);
         }
@@ -673,7 +673,7 @@ private(i,tid,xscaling,vscaling)
             }
             else{
                 ip_perform[0] = 1;
-                ip_perform[1] = opt.FoF_perform_useskip;
+                ip_perform[2] = opt.FoF_perform_useskip;
                 treeomp[tid]=new KDTree(dp_perform, ip_perform, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
@@ -1733,20 +1733,20 @@ private(i,tid)
 	if(opt.foftype==FOF6DCORE){
 		delete tree;
 		if(!opt.FoF_perform_useadt_forsearch){
-            tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHS);
-        }
-        else{
-            ip_perform[0] = 2;
-            ip_perform[1] = opt.FoF_perform_useskip;
-            dp_perform[1] = param[1];
-            dp_perform[2] = param[2];
-            tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHS);
-        }
+            		tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHS);
+        	}
+        	else{
+			ip_perform[0] = 2;
+			ip_perform[2] = opt.FoF_perform_useskip;
+			dp_perform[1] = param[1];
+			dp_perform[2] = param[2];
+
+			tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHS);
+        	}
 		param[0]=tree->GetTreeType();
 	}
 
         pfofbg=tree->FOFCriterion(fofcmp,param,numgroupsbg,minsize,iorder,icheck,FOFcheckbg);
-
         for (i=0;i<nsubset;i++) if (pfofbg[Partsubset[i].GetID()]<=1 && pfof[Partsubset[i].GetID()]==0) Partsubset[i].SetType(numactiveloops);
 
         //store the dispersion limit factor, which depends on level of the loop at which cores are found as the disperions criterion limits how large a dispersion a core can have when measured
@@ -1792,6 +1792,25 @@ private(i,tid)
                 //we adjust the particles potentials so as to ignore already tagged particles using FOFcheckbg
                 //here since loop just iterates to search the largest core, we just set all previously tagged particles not belonging to main core as 1
                 for (i=0;i<nsubset;i++) Partsubset[i].SetPotential((pfofbgnew[Partsubset[i].GetID()]!=1)+(pfof[Partsubset[i].GetID()]>0));
+
+		//-- JS --
+		// Update tree for 6DFOF CORE search case with using updated param
+		if(opt.foftype==FOF6DCORE){
+			delete tree;
+			if(!opt.FoF_perform_useadt_forsearch){
+            			tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHS);
+        		}
+        		else{
+				ip_perform[0] = 2;
+				ip_perform[2] = opt.FoF_perform_useskip;
+				dp_perform[1] = param[1];
+				dp_perform[2] = param[2];
+
+				tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHS);
+        		}
+			param[0]=tree->GetTreeType();
+		}
+			
                 pfofbg=tree->FOFCriterion(fofcmp,param,numgroupsbg,minsize,iorder,icheck,FOFcheckbg);
                 //now if numgroupsbg is greater than one, need to update the pfofbgnew array
                 if (numgroupsbg>1) {
