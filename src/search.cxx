@@ -119,7 +119,16 @@ Int_t* SearchFullSet(Options &opt, const Int_t nbodies, vector<Particle> &Part, 
 #endif
     {
         vr::Timer t;
-        tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+        if(!opt.FoF_perform_useadt_fordomain){
+        	tree = new KDTree(Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+        }
+        else{
+            ip_perform[0] = 0;
+            ip_perform[1] = opt.FoF_perform_useadt_nmindomain;
+            ip_perform[2] = opt.FoF_perform_useskip;
+            dp_perform[0] = sqrt(param[1]);
+	    tree = new KDTree(dp_perform, ip_perform, Part.data(),nbodies,opt.Bsize,tree->TPHYS,tree->KEPAN,1000,0,0,0,period);
+        }
         tree->OverWriteInputOrder();
         LOG(info) << "Finished building single trees in " << t;
     }
