@@ -256,6 +256,8 @@ typedef void (*ExtraPropFunc)(double, double, double&);
 #define USYSANDPART 0
 ///when unbinding check to see if least bound particle is also bound
 #define UPART 1
+///when unbinding check to see if least bound particle is also bound (is this real one? Rhee)
+#define UPARTONLY 2
 ///use the bulk centre of mass velocity to define velocity reference frame when determining if particle bound
 #define CMVELREF 0
 ///use the particle at potential minimum. Issues if too few particles used as particles will move in and out of deepest point of the potential well
