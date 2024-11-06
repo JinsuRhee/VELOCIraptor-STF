@@ -653,6 +653,10 @@ private(i,vscale2,mtotregion,vx,vy,vz,vmean)
     ngomp=new Int_t[iend+1];
     for (i=0;i<=iend;i++) {pfofomp[i]=NULL;ngomp[i]=0;}
     Double_t xscaling, vscaling;
+
+	//123123
+	double js_time;
+	Int_t js_nstep=0;
     //run search if 3DFOF found
     if (numgroups > 0)
     {
@@ -668,6 +672,8 @@ private(i,tid,xscaling,vscaling)
 #else
             tid=0;
 #endif
+	js_time = omp_get_wtime();//MyGetTime(); //123123
+
             //if adaptive 6dfof, set params
             if (opt.fofbgtype==FOF6DADAPTIVE) paramomp[2+tid*20]=paramomp[7+tid*20]=vscale2array[i];
             //scale particle positions
@@ -686,6 +692,10 @@ private(i,tid,xscaling,vscaling)
                 treeomp[tid]=new KDTree(dp_perform, ip_perform, &(Part.data()[noffset[i]]),numingroup[i],opt.Bsize,treeomp[tid]->TPHS,tree->KEPAN,100);
             }
             pfofomp[i]=treeomp[tid]->FOF(1.0,ngomp[i],minsize,1,&Head[noffset[i]],&Next[noffset[i]],&Tail[noffset[i]],&Len[noffset[i]]);
+
+		js_nstep++;
+            	if(opt.iverbose && omp_get_wtime() - js_time > 100.) cout<<"    6DFOF Log - "<<i<<" th / "<<js_nstep<<" of "<<iend<<" // # Ptcls : "<<numingroup[i]<<" // # Groups : "<<ngomp[i]<<" // Time : "<<omp_get_wtime() - js_time<<endl;
+
             delete treeomp[tid];
             for (Int_t j=0;j<numingroup[i];j++) {
                 Part[noffset[i]+j].ScalePhase(xscaling,vscaling);
@@ -1167,8 +1177,23 @@ Int_t* SearchSubset(Options &opt, const Int_t nbodies, const Int_t nsubset, Part
     //@{
     if (!(opt.foftype==FOFSTPROBNN||opt.foftype==FOFSTPROBNNLX||opt.foftype==FOFSTPROBNNNODIST||opt.foftype==FOF6DCORE)) {
         LOG(trace) << "Building tree ...";
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
-        param[0]=tree->GetTreeType();
+
+
+	if(!opt.FoF_perform_useadt_forsearch){
+        	tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        }
+        else{
+		ip_perform[0] = 2;
+		ip_perform[2] = opt.FoF_perform_useskip;
+		dp_perform[1] = param[1];
+		dp_perform[2] = param[2];
+
+		tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        }
+	param[0]=tree->GetTreeType();
+
+        //tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        //param[0]=tree->GetTreeType();
         //if large enough for statistically significant structures to be found then search. This is a robust search
         if (nsubset>=MINSUBSIZE) {
             LOG(trace) << "Now search ...";
@@ -1474,7 +1499,20 @@ private(i,tid)
             GetOutliersValues(opt,nsubset,Partsubset,-1);
         }
         ///produce tree to search for 6d phase space structures
-        tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        //tree=new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+
+	if(!opt.FoF_perform_useadt_forsearch){
+        	tree = new KDTree(Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        }
+        else{
+		ip_perform[0] = 2;
+		ip_perform[2] = opt.FoF_perform_useskip;
+		dp_perform[1] = param[1];
+		dp_perform[2] = param[2];
+
+		tree = new KDTree(dp_perform, ip_perform, Partsubset,nsubset,opt.Bsize,tree->TPHYS);
+        }
+	param[0]=tree->GetTreeType();
 
         //now begin fof6d search for large background objects that are missed using smaller grid cells ONLY IF substructures have been found
         //this search can identify merger excited radial shells so for the moment, disabled

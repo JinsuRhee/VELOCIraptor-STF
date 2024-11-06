@@ -15,8 +15,8 @@
 void GetNodeList(Node *np, Int_t &ncell, Node **nodelist, const Int_t bsize){
     nodelist[ncell]=np;
     nodelist[ncell]->SetID(ncell);
-    if (np->GetCount()>bsize){
-    //if(np->GetLeaf()<0){
+    //if (np->GetCount()>bsize){
+    if(np->GetLeaf()<0){
         ncell++;GetNodeList(((SplitNode*)np)->GetLeft(),ncell,nodelist,bsize);
         ncell++;GetNodeList(((SplitNode*)np)->GetRight(),ncell,nodelist,bsize);
     }
@@ -34,8 +34,8 @@ inline void MarkCell(Node *np, Int_t *marktreecell, Int_t *markleafcell, Int_t &
     //enter the cell so long as it is not a leaf node (or minimum cell size)
     //if it is a minimum cell size, the cell is marked with a ileafflag
     if (r2<cR2max[nid]) {
-        if (np->GetCount()>bsize){
-        //if(np->GetLeaf()<0){
+        //if (np->GetCount()>bsize){
+        if(np->GetLeaf()<0){
             MarkCell(((SplitNode*)np)->GetLeft(),marktreecell,markleafcell,ntreecell,nleafcell,r2val,bsize,cR2max,cm,cmtot,xpos,eps2);
             MarkCell(((SplitNode*)np)->GetRight(),marktreecell,markleafcell,ntreecell,nleafcell,r2val,bsize,cR2max,cm,cmtot,xpos,eps2);
         }
@@ -97,7 +97,7 @@ inline void FillUnboundArrays(Options &opt, int maxunbindsize,
             else break;
         }
     }
-    else if (opt.uinfo.ubindtype==UPARTONLY){
+    else if (opt.uinfo.unbindtype==UPARTONLY){
 	Int_t nEfrac=0;
 	if (Efrac<opt.uinfo.minEfrac) nEfrac=(opt.uinfo.minEfrac-Efrac)*ning;
 	for (auto j=0;j<maxunbindsize;j++) {
