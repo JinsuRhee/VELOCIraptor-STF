@@ -479,6 +479,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
     RAMSESFLOAT xtemp[3],vtemp[3];
     RAMSESIDTYPE idval;
     int typeval;
+    int nulltype = 100;
     RAMSESFLOAT ageval,metval;
     int *ngridlevel,*ngridbound,*ngridfile;
     int lmin=1000000,lmax=0;
@@ -829,7 +830,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
             mtemp=1.0;
 #endif
             ageval = agetempchunk[nn];
-	    typeval = 100;
+	    typeval = nulltype;
 
             if (fabs((mtemp-dmp_mass)/dmp_mass) < 1e-5) typeval = DARKTYPE;
 	    if (famtempchunk[nn]==2) typeval = STARTYPE;
@@ -909,7 +910,7 @@ void ReadRamses(Options &opt, vector<Particle> &Part, const Int_t nbodies, Parti
                 count2++;
             }
             else if (opt.partsearchtype==PSTDARK) {
-                if (!(typeval==STARTYPE||typeval==BHTYPE)) {
+                if (!(typeval==STARTYPE||typeval==BHTYPE||typeval==nulltype)) {
 #ifdef USEMPI
                     Pbuf[ibufindex]=Particle(mtemp*mscale,
                         xtemp[0]*lscale,xtemp[1]*lscale,xtemp[2]*lscale,
