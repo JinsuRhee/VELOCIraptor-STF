@@ -2713,6 +2713,18 @@ void MergeSubstructuresPhase(Options &opt, const Int_t nsubset, Particle *&Parts
         }
     }
 
+    // Simple remedy for bug when pfof and numingroups are not updated properly
+    for(Int_t i=0; i<nsubset; i++){
+        if(pfof[i] > newnumgroups) pfof[i] = 0;
+    }
+    for(Int_t i=0; i<numgroups+1; i++){
+        numingroup[i] = 0;
+    }
+    for(Int_t i=0; i<nsubset; i++){
+        if(pfof[i]>=0) numingroup[pfof[i]] ++;
+    }
+
+
     numcores=newnumcores;
     numgroups=newnumgroups;
     numsubs=numgroups-numcores;
